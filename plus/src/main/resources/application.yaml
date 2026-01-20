@@ -1,0 +1,15 @@
+spring:
+    application:
+        name: plus
+    
+    elasticsearch:
+        uris: https://localhost:9200
+        username: elastic
+        password: changeme
+        ssl:
+            ca-path: classpath:ca.crt
+
+management:
+    endpoint:
+        health:
+            show-details: always

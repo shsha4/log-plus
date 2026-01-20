@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "bootRunDebug",
+      "type": "shell",
+      "command": ".\\gradlew.bat bootRun --debug-jvm",
+      "options": {
+        "cwd": "${workspaceFolder}\\plus"
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    }
+  ]
+}
