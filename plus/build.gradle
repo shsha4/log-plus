@@ -45,4 +45,6 @@ kotlin {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	forkEvery = 0
+	maxParallelForks = 1
 }

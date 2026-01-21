@@ -1,13 +1,14 @@
 spring:
     application:
         name: plus
-    
-    elasticsearch:
-        uris: https://localhost:9200
-        username: elastic
-        password: changeme
-        ssl:
-            ca-path: classpath:ca.crt
+
+elasticsearch:
+    host: https://localhost:9200
+    port: 9200
+    username: elastic
+    password: changeme
+    ssl:
+        ca-path: ca.crt
 
 management:
     endpoint:

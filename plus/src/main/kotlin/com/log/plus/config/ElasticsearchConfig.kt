@@ -1,3 +1,5 @@
+package com.log.plus.config
+
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Bean
 import org.springframework.beans.factory.annotation.Value
@@ -13,7 +15,7 @@ import reactor.netty.http.client.HttpClient
 import kotlin.collections.listOf
 
 @Configuration
-class ElasticsearchConfig(
+class ElasticsearchConfig (
     @Value("\${elasticsearch.host}") private val host: String,
     @Value("\${elasticsearch.port}") private val port: Int,
     @Value("\${elasticsearch.username}") private val username: String,
