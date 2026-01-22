@@ -7,33 +7,30 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 
-import com.log.plus.domain.repository.LogEventRepository
-import com.log.plus.domain.entity.LogEvent
+import com.log.plus.application.command.SaveLogEventCommand
+import com.log.plus.application.query.SearchLogEventQuery
+import com.log.plus.application.service.LogEventService
 import com.log.plus.presentation.dto.CreateEventRequest
 import com.log.plus.presentation.dto.EventResponse
 
-import java.time.Instant
-import java.util.UUID
-
 @RestController
 @RequestMapping("/events")
-class EventController (
-    private val logEventRepository: LogEventRepository
+class EventController(
+    private val logEventService: LogEventService
 ) {
 
     @PostMapping
     suspend fun create(@RequestBody request: CreateEventRequest): EventResponse {
-        val event = LogEvent(
-            eventId = request.eventId ?: UUID.randomUUID().toString(),
+        val command = SaveLogEventCommand(
+            eventId = request.eventId,
             service = request.service,
             level = request.level,
             message = request.message,
-            timestamp = request.timestamp ?: Instant.now().toString(),
+            timestamp = request.timestamp,
             traceId = request.traceId,
             tags = request.tags
         )
-
-        return EventResponse.from(logEventRepository.save(event))
+        return EventResponse.from(logEventService.save(command))
     }
 
     @GetMapping
@@ -46,8 +43,15 @@ class EventController (
         @RequestParam(defaultValue = "20") size: Int,
         @RequestParam(defaultValue = "0") page: Int
     ): List<EventResponse> {
-        val events = logEventRepository.search(q, service, level, from, to, size, page)
-        
-        return events.map { EventResponse.from(it) }
+        val query = SearchLogEventQuery(
+            q = q,
+            service = service,
+            level = level,
+            from = from,
+            to = to,
+            size = size,
+            page = page
+        )
+        return logEventService.search(query).map { EventResponse.from(it) }
     }
 }
