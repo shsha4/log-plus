@@ -1,7 +1,10 @@
-```json
-curl -X PUT "https://localhost:9200/log-events" \
+```bash
+# 인덱스 삭제 (재생성 필요시)
+curl -X DELETE "http://localhost:9200/log-events" -u elastic:changeme
+
+# 인덱스 생성
+curl -X PUT "http://localhost:9200/log-events" \
   -u elastic:changeme \
-  --cacert src/main/resources/ca.crt \
   -H "Content-Type: application/json" \
   -d '{
     "mappings": {
@@ -9,7 +12,7 @@ curl -X PUT "https://localhost:9200/log-events" \
         "eventId": { "type": "keyword" },
         "service": { "type": "keyword" },
         "level": { "type": "keyword" },
-        "message": { 
+        "message": {
           "type": "text",
           "fields": { "keyword": { "type": "keyword" } }
         },
