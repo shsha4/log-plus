@@ -4,6 +4,7 @@ import com.log.plus.domain.entity.LogEvent
 
 interface LogEventRepository {
     suspend fun save(event: LogEvent): LogEvent
+    suspend fun saveBulk(events: List<LogEvent>): Int
     suspend fun search(
         q: String?,
         service: String?,
