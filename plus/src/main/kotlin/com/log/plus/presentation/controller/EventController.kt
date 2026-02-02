@@ -6,21 +6,26 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.http.ResponseEntity
+import org.springframework.http.HttpStatus
 
 import com.log.plus.application.command.SaveLogEventCommand
 import com.log.plus.application.query.SearchLogEventQuery
 import com.log.plus.application.service.LogEventService
+import com.log.plus.application.service.IngestService
+import com.log.plus.application.result.EnqueueResult
 import com.log.plus.presentation.dto.CreateEventRequest
 import com.log.plus.presentation.dto.EventResponse
 
 @RestController
 @RequestMapping("/events")
 class EventController(
-    private val logEventService: LogEventService
+    private val logEventService: LogEventService,
+    private val ingestService: IngestService
 ) {
 
     @PostMapping
-    suspend fun create(@RequestBody request: CreateEventRequest): EventResponse {
+    suspend fun create(@RequestBody request: CreateEventRequest): ResponseEntity<EventResponse> {
         val command = SaveLogEventCommand(
             eventId = request.eventId,
             service = request.service,
@@ -30,7 +35,24 @@ class EventController(
             traceId = request.traceId,
             tags = request.tags
         )
-        return EventResponse.from(logEventService.save(command))
+
+        return when (val result = ingestService.enqueue(command)) {
+            is EnqueueResult.Success -> {
+                val response = EventResponse(
+                    eventId = result.eventId,
+                    service = request.service,
+                    level = request.level,
+                    message = request.message,
+                    timestamp = request.timestamp ?: "",
+                    traceId = request.traceId,
+                    tags = request.tags
+                )
+                ResponseEntity.status(HttpStatus.ACCEPTED).body(response)
+            }
+            is EnqueueResult.QueueFull -> {
+                ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build()
+            }
+        }
     }
 
     @GetMapping

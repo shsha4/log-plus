@@ -7,7 +7,23 @@ elasticsearch:
     username: elastic
     password: changeme
 
+ingest:
+    queue:
+        capacity: 10000
+    batch:
+        size: 200
+        flush-interval-ms: 500
+    backpressure:
+        strategy: reject  # or "drop"
+
 management:
     endpoint:
         health:
             show-details: always
+    endpoints:
+        web:
+            exposure:
+                include: health,info,metrics
+    metrics:
+        tags:
+            application: log-plus

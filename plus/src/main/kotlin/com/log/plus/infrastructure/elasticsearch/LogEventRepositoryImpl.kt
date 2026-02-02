@@ -3,15 +3,18 @@ package com.log.plus.infrastructure.elasticsearch
 import org.springframework.stereotype.Repository
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import org.springframework.http.MediaType
 import com.log.plus.domain.entity.LogEvent
 import com.log.plus.domain.repository.LogEventRepository
+import com.fasterxml.jackson.databind.ObjectMapper
 import kotlin.collections.Map
 import kotlin.collections.mapOf
 import kotlin.collections.listOf
 
 @Repository
 class LogEventRepositoryImpl (
-    private val esWebClient: WebClient
+    private val esWebClient: WebClient,
+    private val objectMapper: ObjectMapper
 ): LogEventRepository {
     private val indexName = "log-events"
 
@@ -23,6 +26,29 @@ class LogEventRepositoryImpl (
             .awaitBody<Map<String, Any>>()
 
         return event
+    }
+
+    override suspend fun saveBulk(events: List<LogEvent>): Int {
+        if (events.isEmpty()) return 0
+
+        // NDJSON 형식으로 변환
+        val ndjson = events.flatMap { event ->
+            listOf(
+                """{"index":{"_index":"$indexName","_id":"${event.eventId}"}}""",
+                objectMapper.writeValueAsString(event)
+            )
+        }.joinToString("\n") + "\n"
+
+        val response = esWebClient.post()
+            .uri("/_bulk?refresh=wait_for")  // 즉시 검색 가능하도록
+            .contentType(MediaType.parseMediaType("application/x-ndjson"))
+            .bodyValue(ndjson)
+            .retrieve()
+            .awaitBody<Map<String, Any>>()
+
+        // 응답에서 성공한 개수 반환
+        val items = response["items"] as? List<*>
+        return items?.size ?: 0
     }
 
     override suspend fun search(q: String?,
